@@ -165,7 +165,8 @@ fun registerTasks(project: Project) {
             val compileDexTask = compileDex.get()
             it.dependsOn(compileDexTask)
             if (extension.isCrossPlatform) {
-                it.dependsOn(compilePluginJar)
+                val compilePluginJarTask = compilePluginJar.get()
+                it.dependsOn(compilePluginJarTask)
             }
 
             val manifestFile = intermediates.resolve("manifest.json")
