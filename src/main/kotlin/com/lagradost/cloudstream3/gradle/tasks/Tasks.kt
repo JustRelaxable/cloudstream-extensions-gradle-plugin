@@ -163,10 +163,12 @@ fun registerTasks(project: Project) {
     project.afterEvaluate {
         val make = project.tasks.register("make", Zip::class.java) {
             val compileDexTask = compileDex.get()
+            val zipTask = it
             it.dependsOn(compileDexTask)
+
+
             if (extension.isCrossPlatform) {
-                val compilePluginJarTask = compilePluginJar.get()
-                it.dependsOn(compilePluginJarTask)
+                it.dependsOn(compilePluginJar.get())
             }
 
             val manifestFile = intermediates.resolve("manifest.json")
@@ -186,21 +188,20 @@ fun registerTasks(project: Project) {
                             .build()
                     ).toString()
                 )
+
+                if(extension.isCrossPlatform){
+                    val jarTask = project.tasks.findByName("createFullJarDebug")
+                    val jarFile = jarTask?.outputs?.files?.singleFile
+                    val targetDir = project.buildDir // Top-level build directory
+                    val targetFile = targetDir.resolve("base.jar")
+                    if (jarFile != null) {
+                        jarFile.copyTo(targetFile, overwrite = true)
+                        zipTask.from(targetFile)
+                    }
+                }
             }
 
             it.from(compileDexTask.outputFile)
-
-            //Put cross platform jar in .cs3
-            if(extension.isCrossPlatform){
-                val jarTask = project.tasks.findByName("createFullJarDebug")
-                val jarFile = jarTask?.outputs?.files?.singleFile
-                val targetDir = project.buildDir // Top-level build directory
-                val targetFile = targetDir.resolve("base.jar")
-                if (jarFile != null) {
-                    jarFile.copyTo(targetFile, overwrite = true)
-                    it.from(targetFile)
-                }
-            }
 
             val zip = it as Zip
             if (extension.requiresResources) {
