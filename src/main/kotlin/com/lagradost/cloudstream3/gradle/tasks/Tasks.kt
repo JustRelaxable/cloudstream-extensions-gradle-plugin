@@ -189,6 +189,18 @@ fun registerTasks(project: Project) {
 
             it.from(compileDexTask.outputFile)
 
+            //Put cross platform jar in .cs3
+            if(extension.isCrossPlatform){
+                val jarTask = project.tasks.findByName("createFullJarDebug")
+                val jarFile = jarTask?.outputs?.files?.singleFile
+                val targetDir = project.buildDir // Top-level build directory
+                val targetFile = targetDir.resolve("base.jar")
+                if (jarFile != null) {
+                    jarFile.copyTo(targetFile, overwrite = true)
+                    it.from(targetFile)
+                }
+            }
+
             val zip = it as Zip
             if (extension.requiresResources) {
                 zip.dependsOn(compileResources.get())
